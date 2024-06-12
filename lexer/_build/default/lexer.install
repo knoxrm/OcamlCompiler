@@ -1,0 +1,8 @@
+lib: [
+  "_build/install/default/lib/lexer/META"
+  "_build/install/default/lib/lexer/dune-package"
+  "_build/install/default/lib/lexer/opam"
+]
+bin: [
+  "_build/install/default/bin/lexer"
+]
