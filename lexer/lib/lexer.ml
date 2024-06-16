@@ -1,3 +1,4 @@
+
 open Base
 
 type t = { input : string; position : int; ch : char option }
@@ -32,7 +33,7 @@ let rec check parser condition =
       check parser condition
   | _ -> parser
 
-let rec next_token parser =
+let next_token parser =
   let parser = skip_whitespace parser in
   let open Token in
   match parser.ch with

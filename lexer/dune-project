@@ -2,7 +2,6 @@
 
 (name lexer)
 
-(implicit_transitive_deps true)
 (generate_opam_files true)
 
 (source
@@ -20,7 +19,7 @@
  (name lexer)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune base fmt)
+ (depends ocaml dune)
  (tags
   (topics "to describe" your project)))
 

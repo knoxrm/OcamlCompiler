@@ -1,3 +1,4 @@
+
 type t =
   | IDENT of string
   | KEYWORD of string
@@ -5,3 +6,4 @@ type t =
   | OPERATOR of string
   | DELIMITER of string
   | EOF
+[@@deriving show]

@@ -1,4 +1,4 @@
 (executable
  (public_name lexer)
  (name main)
- (libraries base))
+ (libraries lexlib stdlib base))

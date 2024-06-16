@@ -1,20 +1,25 @@
-open Base
-open Lexer
+(*open Base*)
+open Stdlib
+open Lexlib.Lexer
+open Lexlib.Token
 
-let () =
-  let parser = init "int x = 42" in
-  let rec tokenize parser =
-    match next_token parser with
-    | parser, Some token ->
-        Printf.printf "Token: %s\n"
-          (match token with
-          | Token.KEYWORD k -> "KEYWORD " ^ k
-          | Token.IDENT id -> "IDENT " ^ id
-          | Token.INT_LITERAL num -> "INT_LITERAL " ^ Int.to_string num
-          | Token.OPERATOR op -> "OPERATOR " ^ op
-          | Token.DELIMITER d -> "DELIMITER " ^ d
-          | Token.EOF -> "EOF");
-        tokenize parser
-    | parser, None -> ()
-  in
-  tokenize parser
+let rec lex_all lexer tokens =
+  let lexer, token = next_token lexer in 
+  match token with
+  | None -> List.rev (EOF :: tokens)
+  | Some token -> lex_all lexer (token :: tokens)
+
+let lexer = init "int main() { return 42; }"
+let tokens = lex_all lexer []
+
+ (*Print tokens for demonstration *)
+let print_list = function
+  | IDENT lex -> Format.printf ("IDENT(%s)\n") lex
+  | KEYWORD lex -> Format.printf "KEYWORD(%s)\n" lex
+  | INT_LITERAL value -> Format.printf "INT_LITERAL(%d)\n" value
+  | OPERATOR lex -> Format.printf "OPERATOR(%s)\n" lex
+  | DELIMITER lex -> Format.printf "DELIMITER(%s)\n" lex
+  | EOF -> Format.printf "EOF\n"
+let () = 
+  List.iter print_list tokens
+  (*List.iter tokens ~f:(print_list)*)
