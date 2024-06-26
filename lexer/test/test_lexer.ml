@@ -17,6 +17,7 @@ let print_list = function
   | IDENT lex -> Format.printf ("IDENT(%s)\n") lex
   | KEYWORD lex -> Format.printf "KEYWORD(%s)\n" lex
   | INT_LITERAL value -> Format.printf "INT_LITERAL(%d)\n" value
+  | BOOL_LITERAL boolean -> Format.printf "INT_LITERAL(%s)\n" (if boolean then "true" else "false")
   | OPERATOR lex -> Format.printf "OPERATOR(%s)\n" lex
   | DELIMITER lex -> Format.printf "DELIMITER(%s)\n" lex
   | EOF -> Format.printf "EOF\n"

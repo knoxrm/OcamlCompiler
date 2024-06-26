@@ -1,5 +1,6 @@
 
 open Base
+open Token
 
 type t = { input : string; position : int; ch : char option }
 
@@ -33,9 +34,23 @@ let rec check parser condition =
       check parser condition
   | _ -> parser
 
+let check_token ident = 
+    match ident with 
+    | "if" | "else" | "switch" | "case" | "default" 
+    | "for" | "while" | "do" | "break" | "continue" | "return" | "goto"
+    (* | "int" | "char" | "float" | "double" | "void" | "short" | "long"  *)
+    | "int" | "bool" | "void"
+    | "signed" | "unsigned"
+    | "auto" | "extern" | "static" | "register"
+    | "const" | "volatile"
+    | "struct" | "union" | "enum" | "typedef"
+    | "sizeof" -> KEYWORD ident
+    | "true"  -> BOOL_LITERAL true
+    | "false"  -> BOOL_LITERAL false
+    | _ -> IDENT ident
+
 let next_token parser =
   let parser = skip_whitespace parser in
-  let open Token in
   match parser.ch with
   | None -> (parser, None)
   | Some ch ->
@@ -46,10 +61,10 @@ let next_token parser =
             let parser = check parser is_ident in
             let end_pos = parser.position - start_pos in
             let ident = String.sub parser.input ~pos:start_pos ~len:end_pos in
-            let token =
-              match ident with
-              | "int" | "return" -> KEYWORD ident
-              | _ -> IDENT ident
+            let token = check_token ident
+              (* match ident with *)
+              (* | "int" | "return" -> KEYWORD ident *)
+              (* | _ -> IDENT ident *)
             in
             (parser, token)
         | '0' .. '9' ->

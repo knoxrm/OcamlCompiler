@@ -1,4 +1,4 @@
 (library
  (name lexlib)
  (libraries base)
- (modules lexer token))
+ (modules lexer token ast parser))
