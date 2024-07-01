@@ -76,8 +76,7 @@ Week | Event | Due
 # Tools
 
 <!-- List the tools & services you will be using. Please, prefer cross-OS, open-source & free tools as much as possible, and prefer if possible services that are free of charge. -->
-- Bril
-- Yacc
+- Ocaml
 - Neovim
 - Fish shell
 - I use Arch btw
@@ -85,6 +84,8 @@ Week | Event | Due
 # Resources
 - [Compiler's Playlist from Stanford](https://www.youtube.com/playlist?list=PLTsf9UeqkRebOYdw4uqSN0ugRShSmHrzH)
 - [Compilers: Principles, Techniques, and Tools](https://www.amazon.com/Compilers-Principles-Techniques-Alfred-Aho/dp/0201100886)
+- [Thorston Ball's Interpreter Book](https://interpreterbook.com/)
+- [Thorston Ball's Compiler Book](https://compilerbook.com/)
 
 <!--
 List the resources you plan on using, ideally with precise bibliographical references and / or links.

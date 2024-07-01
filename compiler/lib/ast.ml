@@ -24,7 +24,9 @@ and expr =
         }
     | FunctionLiteral of 
         { parameters: ident list
-        ; body: block
+        ; body: block 
+        ; return_type: string option
+        ; name: string option
         }
     | Call of 
         { fn: expr 

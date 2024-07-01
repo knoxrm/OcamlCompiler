@@ -1,6 +1,6 @@
 (lang dune 3.15)
 
-(name lexer)
+(name compiler)
 
 (generate_opam_files true)
 
@@ -16,10 +16,10 @@
 (documentation https://url/to/documentation)
 
 (package
- (name lexer)
+ (name compiler)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends ocaml dune base alcotest)
  (tags
   (topics "to describe" your project)))
 
