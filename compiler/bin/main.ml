@@ -15,8 +15,6 @@ let rec print_ast stmts =
             print_stmt 1 stmt
         ) stmts
 
-
-
 and stringify token =
   match token with
   | IDENT s -> Format.asprintf "IDENT(%s)" s
@@ -26,9 +24,6 @@ and stringify token =
   | OPERATOR s -> Format.asprintf "OPERATOR(%s)" s
   | DELIMITER s -> Format.asprintf "DELIMITER(%s)" s
   | EOF -> "EOF"
-
-
-
 
 
 and print_expr level expr =
@@ -92,6 +87,37 @@ and print_expr level expr =
         print_expr (level + 2) left;
         Format.printf "%s\tRight:\n" ind;
         print_expr (level + 2) right
+    | ForLoop { init; condition; update; body } ->
+        Format.printf "%sFor Loop:\n" ind;
+        (match init with
+         | Some init_stmt -> 
+             Format.printf "%s\tInitialization:\n" ind;
+             print_stmt (level + 1) init_stmt
+         | None -> Format.printf "%s\tNo initialization\n" ind);
+        (match condition with
+         | Some cond_expr -> 
+             Format.printf "%s\tCondition:\n" ind;
+             print_expr (level + 1) cond_expr
+         | None -> Format.printf "%s\tNo condition (infinite loop)\n" ind);
+        (match update with
+         | Some update_stmt -> 
+             Format.printf "%s\tUpdate:\n" ind;
+             print_stmt (level + 1) update_stmt
+         | None -> Format.printf "%s\tNo update\n" ind);
+        Format.printf "%s\tBody:\n" ind;
+        print_block (level + 1) body
+    | WhileLoop { condition; body } ->
+        Format.printf "%sWhile Loop:\n" ind;
+        Format.printf "%s\tCondition:\n" ind;
+        print_expr (level + 1) condition;
+        Format.printf "%s\tBody:\n" ind;
+        print_block (level + 1) body
+    | DoWhileLoop { body; condition } ->
+        Format.printf "%sDo-While Loop:\n" ind;
+        Format.printf "%s\tBody:\n" ind;
+        print_block (level + 1) body;
+        Format.printf "%s\tCondition:\n" ind;
+        print_expr (level + 1) condition
 
 and print_block level block =
     let ind = indent level in
@@ -126,6 +152,7 @@ let parse_and_print input =
         print_tokens lexer
   in
     print_tokens lexer;
+    Format.printf "\n@.";
   let parser = init_parser lexer in
   try
     let _, ast = parse_program parser in
@@ -137,17 +164,66 @@ let parse_and_print input =
 
 
 let () =
-  (* Test cases *)
-  let test_cases = [
-    "5 + 3;";
-    "return 42;";
-    "x = 10; y = 20; x + y;";
-    "if (x < 10) { return x; } else { return y; }";
-    "int main() { return 0; }"
-  ] in
+    (* Test cases *)
+    let test_cases = [
+        "5 + 3;";
+        "return 42;";
+        "x = 10; y = 20; x + y;";
+        "if (x < 10) { return x; } else { return y; }";
+        "int main() { return 0; }";
+        "int add(int a, int b) { return a + b; }";
+        "int[] numbers = [1, 2, 3, 4, 5];";
+        "numbers[2] = 10;";
+        "int third = numbers[2];";
+        "void printArray(int[] arr) { return; }";
+            (* Function calls *)
+        "foo(1, 2, 3);";
+        "bar(x, y + z);";
+        "baz(qux(), 5);";
 
-  List.iter (fun case ->
-    Format.printf "\n--- Test Case ---\n";
-    parse_and_print case;
-    Format.printf "--- End Test Case ---\n\n"
-  ) test_cases
+        (* Function calls in expressions *)
+        "int result = add(5, multiply(3, 4));";
+
+        (* Function calls as statements *)
+        "printArray(numbers);";
+        "process(getData(), 10);";
+        (* For loops *)
+        "for (int i = 0; i < 10; i = i + 1) { print(i); }";
+        "for (;;) { if (x > 10) break; }";  (* Infinite loop *)
+        "for (int i = 0; i < 5;) { print(i); i = i + 1; }";  (* No update in for statement *)
+        "for (; x < 100; x = x + 1) { process(x); }";  (* No initialization *)
+
+        (* While loops *)
+        "while (x < 10) { x = x + 1; }";
+        "while (true) { if (condition()) return false; }";  (* Infinite loop with break *)
+
+        (* Do-while loops *)
+        "do { print(x); x = x + 1; } while (x < 10);";
+        "do { process(); } while (false);";  (* Always executes once *)
+
+        (* Nested loops *)
+        "for (int i = 0; i < 3; i = i + 1) { for (int j = 0; j < 3; j = j + 1) { print(i, j); } }";
+        "int i = 0; while (i < 3) { for (int j = 0; j < 3; j = j + 1) { print(i * 3 + j); } i = i + 1; }";
+
+        (* (* (* Loops with complex conditions *) *) *)
+        (* "for (int i = 0; i < 10 && !done(); i = i + 1) { process(i); }"; *)
+        (* "while (x < 10 || y > 20) { updateXY(); }"; *)
+
+        (* (* (* Loops with break and continue *) *) *)
+        (* "for (int i = 0; i < 10; i = i + 1) { if (i == 5) continue; if (i == 8) break; print(i); }"; *)
+        (* "while (true) { if (condition1()) continue; if (condition2()) break; process(); }"; *)
+
+        (* Loops with function calls *)
+        "for (int i = getStart(); i < getEnd(); i = i + getStep()) { process(i); }";
+        "while (hasNext()) { processNext(); }";
+
+        (* Loops with array operations *)
+        "for (int i = 0; i < arrayLength(arr); i = i + 1) { arr[i] = i * 2; }";
+        "while (i < arrayLength(arr)) { sum = sum + arr[i]; i = i + 1; }";
+    ] in
+
+    List.iter (fun case ->
+        Format.printf "\n--- Test Case ---\n";
+        parse_and_print case;
+        Format.printf "--- End Test Case ---\n\n"
+    ) test_cases

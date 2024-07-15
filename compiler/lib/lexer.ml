@@ -36,15 +36,15 @@ let rec check parser condition =
 
 let check_token ident = 
     match ident with 
-    | "if" | "else" 
-    (* | "for" | "while" | "do" | "break" | "continue" | "return" | "goto" *)
+    | "if" | "else" | "for" | "while" | "do" 
+    (* | "break" | "continue" | "return" | "goto" *)
     (* | "int" | "char" | "float" | "double" | "void" | "short" | "long"  *)
-    | "int" | "bool" | "void"
-    (* | "signed" | "unsigned" *)
-    (* | "auto" | "extern" | "static" | "register" *)
-    (* | "const" | "volatile" *)
-    (* | "struct" | "union" | "enum" | "typedef" *)
-    (* | "sizeof" -> KEYWORD ident *)
+    | "int" | "bool" | "void" | "return"
+    | "signed" | "unsigned"
+    | "auto" | "extern" | "static" | "register"
+    | "const" | "volatile"
+    | "struct" | "union" | "enum" | "typedef"
+    | "sizeof" -> KEYWORD ident
     | "true"  -> BOOL_LITERAL true
     | "false"  -> BOOL_LITERAL false
     | _ -> IDENT ident
@@ -78,7 +78,7 @@ let next_token parser =
         | ('+' | '-' | '*' | '/' | '<' | '>'  | '=') as op ->
             let operator = String.make 1 op in
             (move parser, OPERATOR operator)
-        | ('(' | ')' | '{' | '}' | ';') as delim ->
+            | ('(' | ')' | '{' | '}' | '[' | ']' | ';' | ',') as delim ->
             let delimiter = String.make 1 delim in
             (move parser, DELIMITER delimiter)
         | '\000' -> (parser, EOF)

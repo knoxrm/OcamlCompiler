@@ -37,6 +37,20 @@ and expr =
         { left: expr
         ; right: expr
         }
+    | ForLoop of 
+        { init: stmt option
+        ; condition: expr option
+        ; update: stmt option
+        ; body: block
+        }
+    | WhileLoop of 
+        { condition: expr
+        ; body: block
+        }
+    | DoWhileLoop of 
+        { body: block
+        ; condition: expr;
+        }
 
 and stmt = 
     | Return of expr
