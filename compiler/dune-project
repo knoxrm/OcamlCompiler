@@ -19,7 +19,7 @@
  (name compiler)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune base alcotest)
+ (depends ocaml dune base alcotest llvm)
  (tags
   (topics "to describe" your project)))
 
