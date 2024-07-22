@@ -3,14 +3,6 @@ open Llvm
 
 let symbol_table = Hashtbl.create 100
 
-(* let param = Llvm.param *)
-(* let set_value_name = Llvm.set_value_name *)
-(* let type_of = Llvm.type_of *)
-(* let block_terminator = Llvm.block_terminator *)
-(* let context = global_context () *)
-(* let the_module = create_module context "my_module" *)
-(* let builder = builder context *)
-
 
 let create_context_and_module () =
   let context = global_context () in
@@ -95,50 +87,7 @@ let rec codegen_expr context the_module builder expr =
       position_at_end merge_bb builder;
       phi
   | FunctionLiteral { parameters; body; return_type; name } ->
-      (* Printf.printf "  Function literal: %s\n" (Option.value name ~default:"anonymous"); *)
-      (* let func_name = Option.value name ~default:"anonymous" in *)
-      (* let return_ty = match return_type with *)
-      (*   | Some "int" -> i32_type context *)
-      (*   | Some "void" -> void_type context *)
-      (*   | Some t -> raise (Failure ("Unsupported return type: " ^ t)) *)
-      (*   | None -> i32_type context  (* default to int if not specified *) *)
-      (* in *)
-      (* let param_types = Array.make (List.length parameters) (i32_type context) in *)
-      (* let func_type = function_type return_ty param_types in *)
-      (* let func = declare_function func_name func_type the_module in *)
-
-      (* let bb = append_block context "entry" func in *)
-      (* position_at_end bb builder; *)
-
-      (* (* Create a new scope for function parameters *) *)
-      (* let old_symbol_table = Hashtbl.copy symbol_table in *)
-      (* Hashtbl.clear symbol_table; *)
-
-      (* (* Add parameters to symbol table *) *)
-      (* List.iteri (fun i param -> *)
-      (*   let param_value = param_begin func |> instr_begin |> (fun x -> List.nth_opt (Array.to_list x) i) in *)
-      (*   match param_value with *)
-      (*   | Some value -> *)
-      (*       Hashtbl.add symbol_table param.identifier value *)
-      (*   | None -> raise (Failure ("Parameter not found: " ^ param.identifier)) *)
-      (* ) parameters; *)
-
-      (* (* Generate code for function body *) *)
-      (* let _ = codegen_block context the_module builder body in *)
-
-      (* (* Restore the old symbol table *) *)
-      (* Hashtbl.clear symbol_table; *)
-      (* Hashtbl.iter (Hashtbl.add symbol_table) old_symbol_table; *)
-
-      (* (* Ensure the function always returns *) *)
-      (* if not (block_terminator (insertion_block builder) |> Option.is_some) then *)
-      (*   ignore (build_ret (const_int (i32_type context) 0) builder); *)
-
-      (* func *)
-
-
-
-      (* Format.printf "  Function literal: %s\n" (Option.value name ~default:"anonymous"); *)
+      Format.printf "  Function literal: %s\n" (Option.value name ~default:"anonymous");
       let func_name = Option.value name ~default:"anonymous" in
       let return_ty = match return_type with
         | Some "int" -> i32_type context
@@ -157,25 +106,6 @@ let rec codegen_expr context the_module builder expr =
       let old_symbol_table = Hashtbl.copy symbol_table in
       Hashtbl.clear symbol_table;
       
-      (* Add parameters to symbol table *)
-      (* List.iteri (fun i param -> *)
-      (*   let param_value = param func i in *)
-      (*   set_value_name param.identifier param_value; *)
-      (*   let alloca = build_alloca (type_of param_value) param.identifier builder in *)
-      (*   ignore (build_store param_value alloca builder); *)
-      (*   Hashtbl.add symbol_table param.identifier alloca *)
-      (* ) parameters; *)
-    
-      (* List.iteri (fun i param -> *)
-      (*   let param_value = param_begin func |> instr_begin |> (fun x -> List.nth_opt (Array.to_list x) i) in *)
-      (*   (* let param_value =  param func i in  *) *)
-      (*   (* set_value_name param.identifier param_value; *) *)
-      (*   (* Hashtbl.add symbol_table param.identifier alloca *) *)
-      (*   match param_value with *)
-      (*   | Some value -> *)
-      (*       Hashtbl.add symbol_table param.identifier value *)
-      (*   | None -> raise (Failure ("Parameter not found: " ^ param.identifier)) *)
-      (* ) parameters; *)
       List.iteri (fun i param ->
           let param_value = 
               match param_begin func with
@@ -252,6 +182,7 @@ and codegen_stmt context the_module builder stmt =
 
 
 and codegen_block context the_module builder { block } =
+  Format.printf "So far so good\n";
   List.fold_left (fun _ stmt -> codegen_stmt context the_module builder stmt) 
     (const_int (i32_type context) 0) block
 
@@ -264,25 +195,11 @@ let codegen_program context the_module builder program =
   | _ ->
       raise (Failure "Expected a single function (main) at the top level")
 
-(* let generate_ir ast = *)
-(*   let context, the_module, builder = create_context_and_module () in *)
-(*   let _ = codegen_program context the_module builder ast in *)
-(*   string_of_llmodule the_module *)
-
 let generate_ir program =
   Format.printf "Starting IR generation\n";
   let context, the_module, builder = create_context_and_module () in
-  (* let context = global_context () in *)
-  (* let the_module = create_module context "my_module" in *)
-  (* let builder = builder context in *)
   let _ = codegen_program context the_module builder program in
   let result = string_of_llmodule the_module in
   Format.printf "Finished IR generation\n";
   result
-(* let generate_ir program = *)
-(*   let context = global_context () in *)
-(*   let the_module = create_module context "my_module" in *)
-(*   let builder = builder context in *)
-(*   let _ = codegen_program context the_module builder program in *)
-(*   string_of_llmodule the_module *)
 
