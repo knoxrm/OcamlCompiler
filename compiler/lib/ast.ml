@@ -56,6 +56,11 @@ and stmt =
     | Return of expr
     | ExprStmt of expr
     | BlockStmt of block
+    | Var of 
+        { var_type: string
+        ; name: string
+        ; init: expr option
+        }
 
 and ident = { identifier : string } 
 and block = { block : stmt list } 

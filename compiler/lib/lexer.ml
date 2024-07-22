@@ -36,7 +36,8 @@ let rec check parser condition =
 
 let check_token ident = 
     match ident with 
-    | "if" | "else" | "for" | "while" | "do" 
+    | "if" | "else" 
+    | "for" | "while" | "do" 
     (* | "break" | "continue" | "return" | "goto" *)
     (* | "int" | "char" | "float" | "double" | "void" | "short" | "long"  *)
     | "int" | "bool" | "void" | "return"
@@ -75,10 +76,10 @@ let next_token parser =
             let num = Int.of_string num_str in
             let token = INT_LITERAL num in
             (parser, token)
-        | ('+' | '-' | '*' | '/' | '<' | '>'  | '=') as op ->
+        | ('+' | '-' | '*' | '/' | '<' | '>' | '=' | '&' | '|' | '!') as op ->
             let operator = String.make 1 op in
             (move parser, OPERATOR operator)
-            | ('(' | ')' | '{' | '}' | '[' | ']' | ';' | ',') as delim ->
+        | ('(' | ')' | '{' | '}' | '[' | ']' | ';' | ',') as delim ->
             let delimiter = String.make 1 delim in
             (move parser, DELIMITER delimiter)
         | '\000' -> (parser, EOF)

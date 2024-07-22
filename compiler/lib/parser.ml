@@ -52,7 +52,7 @@ let rec parse_program parser =
   in
   let parser, stmts = parse_all parser [] in
   Format.printf "Finished parsing, found %d statements@." (List.length stmts);
-  parser, stmts
+    parser, { stmts= stmts }
 
 and expect_token parser expected = 
     match parser.curToken with 
@@ -194,16 +194,10 @@ and parse_var_declaration parser var_type name =
         let parser = advance parser in
         let parser, value = parse_expr parser in
         let parser = expect_token parser (DELIMITER ";") in
-        parser, BlockStmt { block = [
-            ExprStmt (Identifier { identifier = var_type });
-            ExprStmt (Infix { left = Identifier { identifier = name }; operator = "="; right = value })
-        ]}
+        parser, Var { var_type; name; init=Some value }
     | Some (DELIMITER ";") ->
         let parser = advance parser in
-        parser, BlockStmt { block = [
-            ExprStmt (Identifier { identifier = var_type });
-            ExprStmt (Identifier { identifier = name })
-        ]}
+        parser, Var { var_type; name; init=None }
     | _ -> failwith "Expected '=' or ';'"
 
 and parse_expr_stmt parser = 

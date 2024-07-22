@@ -1,3 +1,4 @@
 (test
- (name test_compiler)
- (libraries lexlib stdlib base alcotest))
+ (name test_evaluator)
+ (libraries alcotest llvm lexlib)
+ (modules test_evaluator))

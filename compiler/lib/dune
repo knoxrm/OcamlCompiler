@@ -1,4 +1,4 @@
 (library
  (name lexlib)
  (libraries base llvm)
- (modules lexer token ast parser))
+ (modules lexer token ast parser environment evaluator))
