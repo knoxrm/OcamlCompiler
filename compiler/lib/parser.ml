@@ -58,7 +58,8 @@ and expect_token parser expected =
     match parser.curToken with 
     | Some token when is_token_equal token expected -> advance parser 
     | Some t -> 
-        Format.printf "Failed token: %s@." (show_token t);
+        (* Format.printf "Failed token: %s@." (show_token t); *)
+        Format.printf "Expected %s, but got: %s@." (show_token expected) (show_token t);
         failwith "Unexpected Token"
     | _ ->
         failwith "Unexpected Token"
@@ -172,13 +173,38 @@ and parse_type_declaration parser =
     let parser, name = 
         match parser.curToken with
         | Some (IDENT n) -> advance parser, n
-        | _ -> failwith "Unexpected identifier"
+        | _ as e -> failwith "Unexpected identifier %s" e
     in
     match parser.curToken with
     | Some (DELIMITER "(") -> parse_function_literal parser keyword_type name
+    | Some (DELIMITER "[") ->
+        let parser = advance parser in
+        let parser, size = parse_expr parser in
+        let parser = expect_token parser (DELIMITER "]") in
+        parse_array_declaration parser keyword_type name size
     | Some (OPERATOR "=") | Some (DELIMITER ";") -> 
         parse_var_declaration parser keyword_type name
-    | _ -> failwith "Expected '(', '=', or ';'"
+    | Some t -> 
+        Format.printf "Unexpected token in type declaration: %s@." (show_token t);
+        failwith (Format.sprintf "Expected '(', '[', '=', or ';', got %s" (show_token t))
+    | None -> 
+        failwith "Unexpected end of input in type declaration"
+
+and parse_array_declaration parser var_type name size =
+    match parser.curToken with
+    | Some (OPERATOR "=") ->
+        let parser = advance parser in
+        let parser, value = parse_expr parser in
+        let parser = expect_token parser (DELIMITER ";") in
+        parser, Var { var_type = var_type ^ "[]"; name; init = Some (Array [size; value]) }
+    | Some (DELIMITER ";") ->
+        let parser = advance parser in
+        parser, Var { var_type = var_type ^ "[]"; name; init = Some (Array [size]) }
+    | Some t -> 
+        Format.printf "Unexpected token in array declaration: %s@." (show_token t);
+        failwith (Format.sprintf "Expected '=' or ';', got %s" (show_token t))
+    | None -> 
+        failwith "Unexpected end of input in array declaration"
 
 and parse_function_literal parser return_type name = 
     let parser = expect_token parser (DELIMITER "(") in
@@ -198,7 +224,12 @@ and parse_var_declaration parser var_type name =
     | Some (DELIMITER ";") ->
         let parser = advance parser in
         parser, Var { var_type; name; init=None }
-    | _ -> failwith "Expected '=' or ';'"
+    | Some t -> 
+        Format.printf "Unexpected token in var declaration: %s@." (show_token t);
+        failwith (Format.sprintf "Expected '=', '[', or ';', got %s" (show_token t))
+    | None -> 
+        failwith "Unexpected end of input in var declaration"
+    (* | _ -> failwith "Expected '=' or ';'" *)
 
 and parse_expr_stmt parser = 
     let parser, expr = parse_expr parser in

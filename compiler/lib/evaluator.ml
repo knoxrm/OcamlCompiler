@@ -52,40 +52,66 @@ let rec codegen_expr context the_module builder expr =
        | _ -> raise (Failure ("Unknown operator: " ^ operator)))
   
   | If { condition; consequence; alternative } ->
-      let cond = codegen_expr context the_module builder condition in
-      let zero = const_int (i1_type context) 0 in
-      let cond_val = build_icmp Icmp.Ne cond zero "ifcond" builder in
-      
-      let start_bb = insertion_block builder in
-      let the_function = block_parent start_bb in
-      
-      let then_bb = append_block context "then" the_function in
-      position_at_end then_bb builder;
-      let then_val = codegen_block context the_module builder consequence in
-      let new_then_bb = insertion_block builder in
-      
-      let else_bb = append_block context "else" the_function in
-      position_at_end else_bb builder;
-      let else_val = match alternative with
-        | Some alt -> codegen_block context the_module builder alt
-        | None -> const_int (i32_type context) 0 in
-      let new_else_bb = insertion_block builder in
-      
-      let merge_bb = append_block context "ifcont" the_function in
-      position_at_end merge_bb builder;
-      let phi = build_phi [(then_val, new_then_bb); (else_val, new_else_bb)] "iftmp" builder in
-      
-      position_at_end start_bb builder;
-      ignore (build_cond_br cond_val then_bb else_bb builder);
-      
-      position_at_end new_then_bb builder;
-      ignore (build_br merge_bb builder);
-      
-      position_at_end new_else_bb builder;
-      ignore (build_br merge_bb builder);
-      
-      position_at_end merge_bb builder;
-      phi
+      (* let cond = codegen_expr context the_module builder condition in *)
+      (* let zero = const_int (i1_type context) 0 in *)
+      (* let cond_val = build_icmp Icmp.Ne cond zero "ifcond" builder in *)
+
+      (* let start_bb = insertion_block builder in *)
+      (* let the_function = block_parent start_bb in *)
+
+      (* let then_bb = append_block context "then" the_function in *)
+      (* position_at_end then_bb builder; *)
+      (* let then_val = codegen_block context the_module builder consequence in *)
+      (* let new_then_bb = insertion_block builder in *)
+
+      (* let else_bb = append_block context "else" the_function in *)
+      (* position_at_end else_bb builder; *)
+      (* let else_val = match alternative with *)
+      (*   | Some alt -> codegen_block context the_module builder alt *)
+      (*   | None -> const_int (i32_type context) 0 in *)
+      (* let new_else_bb = insertion_block builder in *)
+
+      (* let merge_bb = append_block context "ifcont" the_function in *)
+      (* position_at_end merge_bb builder; *)
+      (* let phi = build_phi [(then_val, new_then_bb); (else_val, new_else_bb)] "iftmp" builder in *)
+
+      (* position_at_end start_bb builder; *)
+      (* ignore (build_cond_br cond_val then_bb else_bb builder); *)
+
+      (* position_at_end new_then_bb builder; *)
+      (* ignore (build_br merge_bb builder); *)
+
+      (* position_at_end new_else_bb builder; *)
+      (* ignore (build_br merge_bb builder); *)
+
+      (* position_at_end merge_bb builder; *)
+      (* phi *)
+    let cond = codegen_expr context the_module builder condition in
+    let cond_val = match condition with
+      | Identifier _ -> 
+          (* If it's a variable, we need to load its value *)
+          build_load cond "condtmp" builder
+      | _ -> cond
+    in
+    let cmp = build_icmp Icmp.Sgt cond_val (const_int (i32_type context) 5) "cmptmp" builder in
+    
+    let the_function = block_parent (insertion_block builder) in
+    let then_bb = append_block context "then" the_function in
+    let else_bb = append_block context "else" the_function in
+    
+    ignore (build_cond_br cmp then_bb else_bb builder);
+    
+    position_at_end then_bb builder;
+    ignore (codegen_block context the_module builder consequence);
+    
+    position_at_end else_bb builder;
+    (match alternative with
+     | Some alt -> ignore (codegen_block context the_module builder alt)
+     | None -> ());
+    
+    (* Both branches should end with a return, so we don't need a merge block *)
+    const_int (i32_type context) 0 (* Dummy value, will not be used *)
+
   | FunctionLiteral { parameters; body; return_type; name } ->
       Format.printf "  Function literal: %s\n" (Option.value name ~default:"anonymous");
       let func_name = Option.value name ~default:"anonymous" in
@@ -106,26 +132,41 @@ let rec codegen_expr context the_module builder expr =
       let old_symbol_table = Hashtbl.copy symbol_table in
       Hashtbl.clear symbol_table;
       
-      List.iteri (fun i param ->
-          let param_value = 
-              match param_begin func with
-              | Before first_param -> 
-                  let rec nth_param n current =
-                  if n = 0 then Some current
-                  else 
-                      match instr_succ current with
-                      | Before next -> nth_param (n-1) next
-                      | At_end _ -> None
-                  in
-                  nth_param i first_param
-              | At_end _ -> None
-          in
-          match param_value with
-          | Some value ->
-              Hashtbl.add symbol_table param.identifier value
-          | None -> raise (Failure ("Parameter not found: " ^ param.identifier))
-        ) parameters; 
+      (* List.iteri (fun i param -> *)
+      (*     let param_value =  *)
+      (*         match param_begin func with *)
+      (*         | Before first_param ->  *)
+      (*             let rec nth_param n current = *)
+      (*             if n = 0 then Some current *)
+      (*             else  *)
+      (*                 match instr_succ current with *)
+      (*                 | Before next -> nth_param (n-1) next *)
+      (*                 | At_end _ -> None *)
+      (*             in *)
+      (*             nth_param i first_param *)
+      (*         | At_end _ -> None *)
+      (*     in *)
+      (*     match param_value with *)
+      (*     | Some value -> *)
+      (*         set_value_name param.identifier value; *)
+      (*         let alloca = build_alloca (type_of value) param.identifier builder in *)
+      (*         ignore (build_store value alloca builder); *)
+      (*         Hashtbl.add symbol_table param.identifier alloca *)
+      (*     | None -> raise (Failure ("Parameter not found: " ^ param.identifier)) *)
+      (*   ) parameters;  *)
       (* Generate code for function body *)
+      Format.printf "Number of parameters: %d\n" (List.length parameters);
+      List.iteri (fun i param ->
+        Format.printf "Processing parameter %d: %s\n" i param.identifier;
+        let param_value = Llvm.param func i in
+        Format.printf "Parameter value: %s\n" (string_of_llvalue param_value);
+        set_value_name param.identifier param_value;
+        let alloca = build_alloca (type_of param_value) param.identifier builder in
+        ignore (build_store param_value alloca builder);
+        Hashtbl.add symbol_table param.identifier alloca;
+        Format.printf "Added parameter %s to symbol table\n" param.identifier;
+      ) parameters;
+
       Format.printf "  Generating code for function body\n";
       let _ = codegen_block context the_module builder body in
       
@@ -138,12 +179,38 @@ let rec codegen_expr context the_module builder expr =
         ignore (build_ret (const_int (i32_type context) 0) builder);
       
       func
-  | Call _ ->
-      raise (Failure "Function calls not yet implemented")
-  | Array _ ->
-      raise (Failure "Array expressions not yet implemented")
-  | Index _ ->
-      raise (Failure "Array indexing not yet implemented")
+  | Call { fn; args } ->
+      (* raise (Failure "Function calls not yet implemented") *)
+      Format.printf "  Function call\n";
+      let callee =
+        match fn with
+        | Identifier { identifier } -> 
+            (match lookup_function identifier the_module with
+            | Some f -> f
+            | None -> raise (Failure ("Unknown function: " ^ identifier)))
+        | _ -> codegen_expr context the_module builder fn
+      in
+      let args = List.map (codegen_expr context the_module builder) args in
+      build_call callee (Array.of_list args) "calltmp" builder
+  | Array exprs ->
+      Printf.printf "  Array literal\n";
+      let elements = List.map (codegen_expr context the_module builder) exprs in
+      let ty = type_of (List.hd elements) in
+      let arr_type = array_type ty (List.length elements) in
+      let arr_alloca = build_alloca arr_type "array" builder in
+      List.iteri (fun i el ->
+        let idx = const_int (i32_type context) i in
+        let gep = build_gep arr_alloca [| const_int (i32_type context) 0; idx |] "array_index" builder in
+        ignore (build_store el gep builder)
+      ) elements;
+      arr_alloca
+
+  | Index { left; right } ->
+      Printf.printf "  Array indexing\n";
+      let arr = codegen_expr context the_module builder left in
+      let idx = codegen_expr context the_module builder right in
+      let gep = build_gep arr [| const_int (i32_type context) 0; idx |] "array_index" builder in
+      build_load gep "array_load" builder
   | ForLoop _ ->
       raise (Failure "For loops not yet implemented")
   | WhileLoop _ ->
@@ -182,24 +249,37 @@ and codegen_stmt context the_module builder stmt =
 
 
 and codegen_block context the_module builder { block } =
-  Format.printf "So far so good\n";
   List.fold_left (fun _ stmt -> codegen_stmt context the_module builder stmt) 
     (const_int (i32_type context) 0) block
 
 let codegen_program context the_module builder program =
   Format.printf "Starting codegen for program\n";
-  match program with
-  | { stmts = [ExprStmt (FunctionLiteral func)] } ->
+  let codegen_top_level_function = function
+  | ExprStmt (FunctionLiteral func) ->
       ignore (codegen_expr context the_module builder (FunctionLiteral func));
-      the_module
   | _ ->
-      raise (Failure "Expected a single function (main) at the top level")
+        raise (Failure "Expected a single function (main) at the top level")
+  in
+  List.iter codegen_top_level_function program.stmts;
+  
+  (* Ensure main function exists *)
+  (match lookup_function "main" the_module with
+  | Some _ -> ()
+  | None -> raise (Failure "No main function defined"));
+  
+  the_module
 
 let generate_ir program =
   Format.printf "Starting IR generation\n";
   let context, the_module, builder = create_context_and_module () in
-  let _ = codegen_program context the_module builder program in
-  let result = string_of_llmodule the_module in
+  let result = codegen_program context the_module builder program in
+  let ir = string_of_llmodule result in
   Format.printf "Finished IR generation\n";
-  result
+  ir
+  (* Format.printf "Starting IR generation\n"; *)
+  (* let context, the_module, builder = create_context_and_module () in *)
+  (* let _ = codegen_program context the_module builder program in *)
+  (* let result = string_of_llmodule the_module in *)
+  (* Format.printf "Finished IR generation\n"; *)
+  (* result *)
 

@@ -235,6 +235,25 @@ let () =
         (* Loops with array operations *)
         "for (int i = 0; i < arrayLength(arr); i = i + 1) { arr[i] = i * 2; }";
         "while (i < arrayLength(arr)) { sum = sum + arr[i]; i = i + 1; }";
+        "
+        int add(int a, int b) {
+        return a + b;
+        }
+
+        int main() {
+        return add(3, 4);
+        }";
+        "
+    int main() {
+      int[5] arr;
+      arr[0] = 10;
+      arr[1] = 20;
+      arr[2] = 30;
+      arr[3] = 40;
+      arr[4] = 50;
+      return arr[2] + arr[4];
+    }
+  "
     ] in
 
     List.iter (fun case ->
