@@ -11,11 +11,15 @@ $ dune build
 ```bash
 $ dune exec compiler
 ```
+## Testing the IR codegen
+```bash
+$ dune runtest
+```
 
 # TODO after this
--[] Write an evaluator
+-[] Figuring out a code gen 
+-[] Figure out how to write how to write basic passes
 -[] Extend the types of tokens that can be parsed and lexed. 
 
 # Limitations
 - Only types that can be parsed right now are int, void and bool. I plan to extend then in the future with types like float, double. 
-- Arrays are still not able to be parsed, but implementing them should be trivial. Same with maps I think
